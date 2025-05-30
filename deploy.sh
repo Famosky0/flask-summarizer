@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# === This is meant to recommit existing project in vps while deploy_full is new project ===
+# === This is meant to recommit existing project in VPS while deploy_full is for new projects ===
 
 # === USER CONFIGURATION ===
 PROJECT_NAME=$1                         # e.g., summarizer
@@ -14,7 +14,7 @@ SUBDOMAIN="${PROJECT_NAME}.${DOMAIN}"
 
 # === CHECK ARGS ===
 if [ -z "$PROJECT_NAME" ]; then
-  echo "❌ Usage: ./deploy_full.sh <project_name>"
+  echo "❌ Usage: ./deploy.sh <project_name>"
   exit 1
 fi
 
@@ -46,12 +46,12 @@ git push origin "$CURRENT_BRANCH"
 
 # === 2. Upload Project to VPS ===
 echo "📤 Uploading project to VPS..."
-sshpass -p "jHhX3n0N5Q8a7Shg4R" ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "mkdir -p $REMOTE_PATH"
-sshpass -p "jHhX3n0N5Q8a7Shg4R" scp -o StrictHostKeyChecking=no -r . ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PATH}
+ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "mkdir -p $REMOTE_PATH"
+scp -o StrictHostKeyChecking=no -r . ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PATH}
 
 # === 3. VPS Setup (via SSH) ===
 echo "⚙️ Setting up project on VPS..."
-sshpass -p "jHhX3n0N5Q8a7Shg4R" ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} << EOF
+ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} << EOF
 cd ${REMOTE_PATH}
 
 # === Check and Install Python 3.8 ===
@@ -104,7 +104,9 @@ pkill gunicorn || echo "🔄 No existing Gunicorn process found."
 nohup gunicorn -w 4 -b 127.0.0.1:8000 app:app &
 
 # === Nginx Config ===
-cat > /etc/nginx/conf.d/${PROJECT_NAME}.conf <<END
+if [ ! -f /etc/nginx/conf.d/${PROJECT_NAME}.conf ]; then
+  echo "🛠️ Creating Nginx config for ${PROJECT_NAME}..."
+  cat > /etc/nginx/conf.d/${PROJECT_NAME}.conf <<END
 server {
     listen 80;
     server_name ${SUBDOMAIN};
@@ -118,6 +120,9 @@ server {
     }
 }
 END
+else
+  echo "✅ Nginx config for ${PROJECT_NAME} already exists. Skipping creation."
+fi
 
 # Reload Nginx
 nginx -t && systemctl reload nginx
