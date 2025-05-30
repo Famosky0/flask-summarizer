@@ -1,16 +1,17 @@
-import requests
-import re
-import os
 from dotenv import load_dotenv
+import os
+import re
+import requests
 
-API_URL = "https://api-inference.huggingface.co/models/facebook/bart-large-cnn"
-
-# Load environment variables from .env
 load_dotenv()
 
-# Access the token
-HF_TOKEN = os.getenv("HUGGINGFACE_TOKEN")
-headers = {"Authorization": f"Bearer {HF_TOKEN}"}
+API_URL = os.getenv("API_URL")
+HF_TOKEN = os.getenv("HF_TOKEN", "").strip()
+
+headers = {
+    "Authorization": f"Bearer {HF_TOKEN}"
+}
+
 
 
 def summarize_chunk(text):
