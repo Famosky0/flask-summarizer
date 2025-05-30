@@ -1,0 +1,6 @@
+Flask
+pdf2image
+transformers
+torch
+Pillow
+PyMuPDF
