@@ -38,8 +38,9 @@ else
   gh repo create "$PROJECT_NAME" --public --source=. --remote=origin --push
 fi
 
-# Push updates to GitHub
-git push origin master
+# Automatically detect current branch
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+git push origin "$CURRENT_BRANCH"
 
 # === 2. Upload Project to VPS ===
 echo "📤 Uploading project to VPS..."
